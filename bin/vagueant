@@ -1,0 +1,217 @@
+#!/bin/bash -e
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+usage() {
+	echo "Vagueant is vaguely like Vagrant for linux containers (lxc)"
+	echo "It automates lxc configuration"
+	echo
+	echo "usage: $0 [options] <command>"
+	echo
+	echo "Note: This script abuses heredocs and evals in an effort to squeeeze it"
+	echo "in to a single file, if you're the kind of person who finds that"
+	echo "uncomfortable, consider not reading the code :)"
+
+	exit 1
+}
+
+# default config
+name="$(basename "$PWD")" # Defaults to directory name
+proxy=""
+conffile="$PWD/vagueant.conf"
+template="ubuntu"
+template_args=(-a i386 -r precise)
+
+# references to provisions to be run, stored in a slightly
+# odd format because we don't have multidimensional arrays
+# in bash
+provisions=()
+
+##################
+# Begin commands #
+##################
+
+# Start up the current lxc
+command_up() {
+	load_conf
+
+	lxc-create -t "$template" -n "$name" -- "${template_args[@]}"
+
+	# Configure apt proxy
+	if [[ ! -z "$proxy" ]]; then
+		echo "Acquire::http { Proxy \"$proxy\"; };" \
+			> /var/lib/lxc/"$name"/rootfs/etc/apt/apt.conf.d/01proxy
+	fi
+
+	# run any provisioning scripts from the config
+	for p in "${provisions[@]}"; do
+		do_provision "$p"
+	done
+}
+
+# Place a template conf file
+command_init() {
+	if [[ -f "$conffile" ]]; then
+		error "An existing configuration file already exists, remove it manually before running '$0 init'."
+	fi
+
+	cat > "$conffile" << EOF
+# This is a vagueant file, it's used by vagueant to tell lxc what to build.
+
+# A proxy used during build time and set as the OS default can be set here:
+# proxy=http://example.com:3142/
+
+# The template defines the OS type, they are usually found under
+# /usr/lib/lxc/templates/lxc-<template name>
+# template=ubuntu
+
+# Some templates will accept additional arguments, pass in some:
+# template_args(--arch i386 --release precise)
+
+# Provisioning enables you to run perform installations or configuration
+# once the base lxc has been installed.
+# provision shell "foo.sh"
+EOF
+
+	echo "The vagueant configuration file has been created."
+	echo "You can now run '$0 up'"
+}
+
+##############
+# Begin misc #
+##############
+
+# Pull conf file in to current memory
+load_conf() {
+	if [[ ! -f "$conffile" ]]; then
+		error "A Vagueant config is required, run '$0 init' to set one up."
+	fi
+	. "$conffile"
+}
+
+# Used by config files to load provisions up in to memory
+provision() {
+	num="${#provisions[@]}"
+
+	# create a variable we can reference in our provisions list
+	# eval should definitely be used with caution, but I can't find an
+	# alternative that works in this scenario (the array causes issues)
+	# see: http://mywiki.wooledge.org/BashFAQ/006#See_Also
+	eval "provision_$num=(\"\$@\")"
+
+	provisions+=(provision_$num)
+}
+
+# Actually run a provision
+do_provision() {
+	# $1 contains our indirect reference to the provision args
+	# again we seem to get stuck using an eval to correctly expand it.
+	eval "set -- \"\${$1[@]}\""
+
+	# first element is always provision type
+	type="$1"
+
+	# take type off the arg list
+	shift
+
+	do_provision_"$type" "$@"
+}
+
+# Shell code provision type
+do_provision_shell() {
+	command="$1"
+
+	# Place run once script
+	cat > /var/lib/lxc/"$name"/rootfs/etc/runonce << EOF
+#!/bin/bash -ex
+
+# prevent runonce from running twice
+echo "@reboot root rm -f /etc/runonce /etc/cron.d/runonce" \
+	> /etc/cron.d/runonce
+
+# Make sure we have \$PATH
+. /etc/environment
+
+$command
+
+# all done
+poweroff
+EOF
+
+	chmod +x /var/lib/lxc/"$name"/rootfs/etc/runonce
+
+	cat /var/lib/lxc/"$name"/rootfs/etc/runonce
+
+	echo "@reboot root /etc/runonce > /var/log/runonce.log" > /var/lib/lxc/"$name"/rootfs/etc/cron.d/runonce
+	# initialize the log (so that we can tail it immediately)
+	echo -n > /var/lib/lxc/"$name"/rootfs/var/log/runonce.log
+
+	# boot up the VM, 
+	lxc-start -n "$name" -c /var/run/lxc/"$name".console -d
+
+	# Watch the runonce log
+	tail -f /var/lib/lxc/"$name"/rootfs/var/log/runonce.log &
+	tailpid=$!
+
+	# Wait for container to finish starting up...
+	lxc-wait -n "$name" -s RUNNING
+	# so that we can wait for runonce to complete.
+	if ! lxc-wait -n "$name" -s STOPPED; then
+		# TODO: first one fails a lot... it'd be nice to know why
+		echo "lxc-wait didn't exit cleanly, trying again in a moment"
+		sleep 2
+	fi
+	lxc-wait -n "$name" -s STOPPED
+
+	# Stop watching log
+	kill $tailpid
+}
+
+error() {
+	echo "$@"
+	exit 1
+}
+
+# parse cli options
+while true; do
+	# quit if we're out of options
+	[[ -z "$1" ]] && break
+	
+	case "$1" in
+		#--max-lag=*|-m=*)
+		#	max_lag="${1#*=}"
+		#	;;
+		--debug)
+			set -x
+			;;
+		--help)
+			usage
+			;;
+		*)
+			command="$1"
+			;;
+	esac
+
+	# get next arg
+	shift
+done
+
+# check command against our whitelist
+case "$command" in
+	up|init) ;;
+	*) usage ;;
+esac
+
+# go!
+command_"$command"
