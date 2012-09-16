@@ -19,6 +19,8 @@ usage() {
 	echo
 	echo "usage: $0 [options] <command>"
 	echo
+	echo "    --help - display this help text."
+	echo
 	echo "Note: This script abuses heredocs and evals in an effort to squeeeze it"
 	echo "in to a single file, if you're the kind of person who finds that"
 	echo "uncomfortable, consider not reading the code :)"
