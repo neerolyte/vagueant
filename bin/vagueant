@@ -31,6 +31,7 @@ usage() {
 	echo "    status - get status of current lxc"
 	echo "    init - create a vagueant.conf file"
 	echo "    create - build a lxc from the vagueant.conf"
+	echo "    up - start up a lxc (create it if required)"
 	echo
 	echo "Note: This script abuses heredocs and evals in an effort to squeeeze it"
 	echo "in to a single file, if you're the kind of person who finds that"
@@ -63,6 +64,11 @@ provisions=()
 # Start up the current lxc
 command_up() {
 	command_create
+
+	if [[ $(command_status) == 'poweroff' ]]; then
+		lxc-start -n "$name" -d -c /var/run/lxc/"$name".console
+		lxc-wait -n "$name" -s RUNNING
+	fi
 }
 
 # create our lxc
@@ -116,23 +122,16 @@ command_status() {
 	# first see if it even exists
 	if ! lxc-ls -1 | egrep -q "^$name\$"; then
 		echo 'not created'
-		exit
+	else
+		status="$(lxc-info -n "$name" 2>&1 | awk '$1 == "state:" {print $2}')"
+
+		# translate lxc status
+		case "$status" in
+			STOPPED) echo poweroff ;;
+			RUNNING) echo running ;;
+			*) echo "unknown: $status" ;;
+		esac
 	fi
-
-	status="$(lxc-info -n "$name" 2>&1 | awk '$1 == "state:" {print $2}')"
-
-	if [[ -z "$status" ]]; then
-		echo 'unknown'
-		exit
-	fi
-
-	# translate lxc status
-	case "$status" in
-		STOPPED) echo poweroff ;;
-		*) echo unknown ;;
-	esac
-
-	exit	
 }
 
 ##############
@@ -254,5 +253,3 @@ fi
 
 # go!
 command_"$command"
-
-echo "Done"

@@ -7,4 +7,4 @@ vagrant status | egrep -q '^default\s+running$' \
 	|| vagrant up
 
 # run the tests
-vagrant ssh -c "sudo /vagrant/tests/all_tests"
+vagrant ssh -c "sudo /vagrant/tests/run_in_vagrant $1"

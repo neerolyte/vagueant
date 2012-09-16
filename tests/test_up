@@ -1,0 +1,28 @@
+#!/bin/bash
+
+testHelpUp() {
+	vagueant --help | grep -q -- 'up - '
+	status=$?
+	assertEquals "--help should describe up" "0" "$status"
+}
+
+testUp() {
+	rm -rf ./tmp && mkdir -p ./tmp && cd ./tmp
+
+	vagueant init > /dev/null 2>&1
+
+	# destroy the existing lxc, just in case
+	( lxc-stop -n tmp; lxc-destroy -n tmp ) > /dev/null 2>&1
+
+	status=$(vagueant status)
+	assertEquals "lxc should start 'not created'" "not created" "$status"
+
+	vagueant up > /dev/null 2>&1
+	assertEquals "vagueant up should exit with 0" "0" "$?"
+
+	status=$(vagueant status)
+	assertEquals "lxc should be running" "running" "$status"
+
+	cd .. && rm -rf ./tmp
+}
+

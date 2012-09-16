@@ -12,7 +12,7 @@ testCreate() {
 	vagueant init > /dev/null 2>&1
 
 	# destroy the existing lxc, just in case
-	lxc-destroy -n tmp
+	( lxc-stop -n tmp; lxc-destroy -n tmp ) > /dev/null 2>&1
 
 	vagueant status | egrep -q 'not created'
 	assertEquals "lxc should start 'not created'" "0" "$?"

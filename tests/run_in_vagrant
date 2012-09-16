@@ -2,11 +2,17 @@
 
 cd "$(dirname "$0")"
 
+if [[ -z "$1" ]]; then
+	tests=(./test_*)
+else
+	tests=("$1")
+fi
+
 # Tests are split in to multiple files to keep them slightly more maintainable
 # shunit2 doesn't seem to let me combine them well, so we cat them together
 # and execute that instead.
 
 tmp="$(mktemp)"
-cat ./test_* > "$tmp"
+cat "${tests[@]}" > "$tmp"
 bash shunit2 "$tmp"
 rm -f "$tmp"
