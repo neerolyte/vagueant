@@ -208,8 +208,6 @@ EOF
 
 	chmod +x /var/lib/lxc/"$name"/rootfs/etc/runonce
 
-	cat /var/lib/lxc/"$name"/rootfs/etc/runonce
-
 	echo "@reboot root /etc/runonce > /var/log/runonce.log" > /var/lib/lxc/"$name"/rootfs/etc/cron.d/runonce
 	# initialize the log (so that we can tail it immediately)
 	echo -n > /var/lib/lxc/"$name"/rootfs/var/log/runonce.log
