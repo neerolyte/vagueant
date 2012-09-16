@@ -62,6 +62,11 @@ provisions=()
 
 # Start up the current lxc
 command_up() {
+	command_create
+}
+
+# create our lxc
+command_create() {
 	load_conf
 
 	lxc-create -t "$template" -n "$name" -- "${template_args[@]}"
@@ -104,6 +109,30 @@ EOF
 
 	echo "The vagueant configuration file has been created."
 	echo "You can now run '$0 up'"
+}
+
+# Status of the current lxc
+command_status() {
+	# first see if it even exists
+	if ! lxc-ls -1 | egrep -q "^$name\$"; then
+		echo 'not created'
+		exit
+	fi
+
+	status="$(lxc-info -n "$name" 2>&1 | awk '$1 == "state:" {print $2}')"
+
+	if [[ -z "$status" ]]; then
+		echo 'unknown'
+		exit
+	fi
+
+	# translate lxc status
+	case "$status" in
+		STOPPED) echo poweroff ;;
+		*) echo unknown ;;
+	esac
+
+	exit	
 }
 
 ##############
@@ -189,7 +218,7 @@ EOF
 	if ! lxc-wait -n "$name" -s STOPPED; then
 		# TODO: first one fails a lot... it'd be nice to know why
 		echo "lxc-wait didn't exit cleanly, trying again in a moment"
-		sleep 2
+		sleep 1
 		lxc-wait -n "$name" -s STOPPED
 	fi
 

@@ -3,7 +3,8 @@
 cd "$(dirname "$0")"
 
 # Prep vagrant
-vagrant up
+vagrant status | egrep -q '^default\s+running$' \
+	|| vagrant up
 
 # run the tests
 vagrant ssh -c "sudo /vagrant/tests/all_tests"
