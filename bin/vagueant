@@ -115,6 +115,7 @@ provision() {
 
 # Actually run a provision
 do_provision() {
+	# Expand the array referenced by $1 in to $@
 	# $1 contains our indirect reference to the provision args
 	# again we seem to get stuck using an eval to correctly expand it.
 	eval "set -- \"\${$1[@]}\""
