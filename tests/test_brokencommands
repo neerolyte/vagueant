@@ -1,0 +1,11 @@
+#!/bin/bash
+
+testNoSuchCommand() {
+	vagueant nosuchcommand > /dev/null 2>&1
+	assertEquals "broken commands should error" "1" "$?"
+
+	vagueant nosuchcommand | grep -q "unknown command 'nosuchcommand'"
+	assertEquals "broken commands should explain why they error" "0" "$?"
+
+}
+

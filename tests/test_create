@@ -1,0 +1,26 @@
+#!/bin/bash
+
+testHelpCreate() {
+	vagueant --help | grep -q -- 'create - '
+	status=$?
+	assertEquals "--help should describe create" "0" "$status"
+}
+
+testCreate() {
+	return # TODO: finish this test
+	rm -rf ./tmp && mkdir -p ./tmp && cd ./tmp
+
+	vagueant init > /dev/null 2>&1
+
+	vagueant status | egrep -q 'not created'
+	assertEquals "lxc should start 'not created'" "0" "$?"
+
+	vagueant create > /dev/null 2>&1
+	assertEquals "vagueant should exit with 0" "0" "$?"
+
+	vagueant status | egrep -q 'poweroff'
+	assertEquals "lxc should be created (poweroff'd)" "0" "$?"
+
+	cd .. && rm -rf ./tmp
+}
+

@@ -14,17 +14,33 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 usage() {
+	if [[ "${#@}" -ne 0 ]]; then
+		echo "ERROR: $@"
+		echo
+	fi
+
 	echo "Vagueant is vaguely like Vagrant for linux containers (lxc)"
 	echo "It automates lxc configuration"
 	echo
 	echo "usage: $0 [options] <command>"
 	echo
+	echo "options:"
 	echo "    --help - display this help text."
+	echo
+	echo "commands:"
+	echo "    status - get status of current lxc"
+	echo "    init - create a vagueant.conf file"
+	echo "    create - build a lxc from the vagueant.conf"
 	echo
 	echo "Note: This script abuses heredocs and evals in an effort to squeeeze it"
 	echo "in to a single file, if you're the kind of person who finds that"
 	echo "uncomfortable, consider not reading the code :)"
 
+	exit 1
+}
+
+error() {
+	echo "ERROR: $@"
 	exit 1
 }
 
@@ -181,11 +197,6 @@ EOF
 	kill $tailpid
 }
 
-error() {
-	echo "$@"
-	exit 1
-}
-
 # parse cli options
 while true; do
 	# quit if we're out of options
@@ -207,11 +218,10 @@ while true; do
 	shift
 done
 
-# check command against our whitelist
-case "$command" in
-	up|init) ;;
-	*) usage ;;
-esac
+# Check if the command actually exists
+if [[ "$(type -t "command_$command")" != 'function' ]]; then
+	usage "unknown command '$command'"
+fi
 
 # go!
 command_"$command"
