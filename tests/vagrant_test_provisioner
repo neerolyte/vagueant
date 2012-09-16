@@ -1,0 +1,34 @@
+#!/bin/bash -e
+
+# Resets a Vagrant VM used by Vagueant for testing.
+#
+# Really dangerous, do not run on a machine you happen to like.
+
+# Prevent running if it looks like there's any chance we may not
+# be inside a Vagrant VM.
+if ! dmidecode | grep -A3 '^BIOS Information$' | grep -q 'Version: VirtualBox'; then
+	echo "ERROR: not in virtualbox, refusing to run"
+	exit 1
+fi
+if ! id vagrant > /dev/null 2>&1; then
+	echo "ERROR: Not in a Vagrant VM, refusing to run"
+	exit 1
+fi
+
+# Install any missing packages
+pkgs=(lxc shunit2)
+missing=()
+for pkg in "${pkgs[@]}"; do
+	if ! dpkg -s "$pkg" > /dev/null 2>&1; then
+		missing+=("$pkg")
+	fi
+done
+if [[ ${#missing[@]} -gt 0 ]]; then
+	apt-get update
+	apt-get install -y "${missing[@]}"
+fi
+
+# Put a symlink to vagueant command so it's in $PATH
+if [[ ! -h /usr/local/bin/vagueant ]]; then
+	ln -s /vagrant/bin/vagueant /usr/local/bin/vagueant
+fi

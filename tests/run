@@ -1,0 +1,11 @@
+#!/bin/bash -e
+
+cd "$(dirname "$0")"
+
+# Prep vagrant
+vagrant up
+
+# run the tests
+# we run them through bash because shunit2 is tryring to run under
+# sh and if we don't force it to run through bash, we lose our namespace
+vagrant ssh -c "sudo /vagrant/tests/all_tests"

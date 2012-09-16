@@ -172,8 +172,8 @@ EOF
 		# TODO: first one fails a lot... it'd be nice to know why
 		echo "lxc-wait didn't exit cleanly, trying again in a moment"
 		sleep 2
+		lxc-wait -n "$name" -s STOPPED
 	fi
-	lxc-wait -n "$name" -s STOPPED
 
 	# Stop watching log
 	kill $tailpid
@@ -190,9 +190,6 @@ while true; do
 	[[ -z "$1" ]] && break
 	
 	case "$1" in
-		#--max-lag=*|-m=*)
-		#	max_lag="${1#*=}"
-		#	;;
 		--debug)
 			set -x
 			;;
@@ -216,3 +213,5 @@ esac
 
 # go!
 command_"$command"
+
+echo "Done"

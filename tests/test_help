@@ -1,0 +1,12 @@
+#!/bin/bash
+
+testHelp() {
+	vagueant --help > /dev/null 2>&1
+	status=$?
+	assertEquals "Calling help shouldn't exit 0" "1" "$status"
+
+	vagueant --help | grep -q -- '--help'
+	status=$?
+	assertEquals "--help should describe arguments" "0" "$status"
+}
+

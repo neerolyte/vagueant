@@ -1,0 +1,23 @@
+# Vagrant spec used to build a sensible environment to run tests in.
+#
+# Fortunately lxc is soooo light weight that we can can comfortably
+# run lxc tests under Vagrant (virtualbox) on most hardware.
+
+Vagrant::Config.run do |config|
+  # Use a modern Ubuntu variant. Use 64 bit so we can test 32bit and 64bit lxc.
+  config.vm.box = "precise64"
+  config.vm.box_url = "http://files.vagrantup.com/precise64.box"
+
+  # Boot with a GUI so you can see the screen. (Default is headless)
+  config.vm.boot_mode = :gui
+
+  # Share an additional folder to the guest VM. The first argument is
+  # an identifier, the second is the path on the guest to mount the
+  # folder, and the third is the path on the host to the actual folder.
+  config.vm.share_folder "v-root", "/vagrant", "../"
+
+  config.vm.provision :shell, :path => "vagrant_test_provisioner"
+end
+
+# -*- mode: ruby -*-
+# vi: set ft=ruby ts=2 sw=2 et :
