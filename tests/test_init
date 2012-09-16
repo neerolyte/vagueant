@@ -1,0 +1,15 @@
+#!/bin/bash
+
+testInit() {
+	rm -rf ./tmp && mkdir -p ./tmp && cd ./tmp
+
+	test -f ./vagueant.conf
+	assertEquals "vagueant.conf should start missing" "1" "$?"
+
+	vagueant init > /dev/null 2>&1
+	test -f ./vagueant.conf
+	assertEquals "vagueant.conf should be created now" "0" "$?"
+
+	cd .. && rm -rf ./tmp
+}
+
