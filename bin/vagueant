@@ -32,6 +32,7 @@ usage() {
 	echo "    init - create a vagueant.conf file"
 	echo "    create - build a lxc from the vagueant.conf"
 	echo "    up - start up a lxc (create it if required)"
+	echo "    console - connect to the console of a running lxc"
 	echo
 	echo "Note: This script abuses heredocs and evals in an effort to squeeeze it"
 	echo "in to a single file, if you're the kind of person who finds that"
@@ -132,6 +133,15 @@ command_status() {
 			*) echo "unknown: $status" ;;
 		esac
 	fi
+}
+
+# Connect to console of lxc
+command_console() {
+	# TODO: How can I test this?
+	if [[ ! "$(command_status)" == "running" ]]; then
+		error "Can not connect to console unless lxc is running (hint: $0 up)"
+	fi
+	lxc-console -n "$name"
 }
 
 ##############
