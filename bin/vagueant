@@ -76,6 +76,11 @@ command_up() {
 command_create() {
 	load_conf
 
+	# don't try to create, if already created
+	if [[ "$(command_status)" != 'not created' ]]; then
+		return
+	fi
+	
 	lxc-create -t "$template" -n "$name" -- "${template_args[@]}"
 
 	# Configure apt proxy
