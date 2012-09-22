@@ -9,21 +9,22 @@ testHelpCreate() {
 testCreate() {
 	rm -rf ./tmp && mkdir -p ./tmp && cd ./tmp
 
-	vagueant init > /dev/null 2>&1
+	muter vagueant init
 
 	# destroy the existing lxc, just in case
-	( lxc-stop -n tmp; lxc-destroy -n tmp ) > /dev/null 2>&1
+	muter lxc-stop -n tmp
+	muter lxc-destroy -n tmp
 
 	vagueant status | egrep -q 'not created'
 	assertEquals "lxc should start 'not created'" "0" "$?"
 
-	vagueant create > /dev/null 2>&1
+	muter vagueant create
 	assertEquals "vagueant create should exit with 0" "0" "$?"
 
 	vagueant status | egrep -q 'poweroff'
 	assertEquals "lxc should be created (poweroff'd)" "0" "$?"
 
-	vagueant create > /dev/null 2>&1
+	muter vagueant create
 	assertEquals "create should be inert on secondary create" "0" "$?"
 
 	cd .. && rm -rf ./tmp

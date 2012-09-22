@@ -12,7 +12,8 @@ testHalt() {
 	muter vagueant init
 
 	# destroy the existing lxc, just in case
-	( lxc-stop -n tmp; lxc-destroy -n tmp ) > /dev/null 2>&1
+	muter lxc-stop -n tmp
+	muter lxc-destroy -n tmp
 
 	muter vagueant halt
 	assertEquals "halt should successfully halt an already halted lxc" "0" "$?"

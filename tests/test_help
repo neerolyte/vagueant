@@ -1,7 +1,7 @@
 #!/bin/bash
 
 testHelp() {
-	vagueant --help > /dev/null 2>&1
+	muter vagueant --help
 	status=$?
 	assertEquals "Calling help shouldn't exit 0" "1" "$status"
 

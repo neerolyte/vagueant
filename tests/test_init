@@ -6,7 +6,7 @@ testInit() {
 	test -f ./vagueant.conf
 	assertEquals "vagueant.conf should start missing" "1" "$?"
 
-	vagueant init > /dev/null 2>&1
+	muter vagueant init
 	test -f ./vagueant.conf
 	assertEquals "vagueant.conf should be created now" "0" "$?"
 

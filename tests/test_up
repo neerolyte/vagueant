@@ -9,15 +9,16 @@ testHelpUp() {
 testUp() {
 	rm -rf ./tmp && mkdir -p ./tmp && cd ./tmp
 
-	vagueant init > /dev/null 2>&1
+	muter vagueant init
 
 	# destroy the existing lxc, just in case
-	( lxc-stop -n tmp; lxc-destroy -n tmp ) > /dev/null 2>&1
+	muter lxc-stop -n tmp
+	muter lxc-destroy -n tmp
 
 	status=$(vagueant status)
 	assertEquals "lxc should start 'not created'" "not created" "$status"
 
-	vagueant up > /dev/null 2>&1
+	muter vagueant up
 	assertEquals "vagueant up should exit with 0" "0" "$?"
 
 	status=$(vagueant status)
