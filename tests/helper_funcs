@@ -1,0 +1,20 @@
+
+# header loaded on the vagrant side of the tests
+
+quote_args() {
+	qargs=()
+	for arg; do
+		qargs+=($(printf %q "$arg"))
+	done
+	echo "${qargs[*]}"
+}
+
+# optionally mute certain statements
+muter() {
+    if $verbose; then
+		printf "Executing: %s\n" "$(quote_args "$@")"
+        "$@"
+    else
+        "$@" > /dev/null 2>&1
+    fi
+}

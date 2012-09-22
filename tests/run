@@ -2,9 +2,11 @@
 
 cd "$(dirname "$0")"
 
+. ./helper_funcs
+
 # Prep vagrant
 vagrant status | egrep -q '^default\s+running$' \
 	|| vagrant up
 
 # run the tests
-vagrant ssh -c "sudo /vagrant/tests/run_in_vagrant $1"
+vagrant ssh -c "sudo /vagrant/tests/vagrant_test_runner $(quote_args "$@")"
