@@ -31,7 +31,9 @@ usage() {
 	echo "    status - get status of current lxc"
 	echo "    init - create a vagueant.conf file"
 	echo "    create - build a lxc from the vagueant.conf"
+	echo "    destroy - get rid of the lxc referenced by vagueant.conf"
 	echo "    up - start up a lxc (create it if required)"
+	echo "    halt - halt lxc specified by vagueant.conf"
 	echo "    console - connect to the console of a running lxc"
 	echo
 	echo "Note: This script abuses heredocs and evals in an effort to squeeeze it"
@@ -94,6 +96,19 @@ command_create() {
 		do_provision "$p"
 	done
 }
+
+# destroy our lxc
+command_destroy() {
+	error TODO: command_destroy
+} # command_destroy()
+
+# halt our lxc
+command_halt() {
+	if [[ $(command_status) == 'running' ]]; then
+		lxc-stop -n "$name"
+		lxc-wait -n "$name" -s STOPPED
+	fi
+} # command_halt()
 
 # Place a template conf file
 command_init() {

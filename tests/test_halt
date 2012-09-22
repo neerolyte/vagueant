@@ -1,0 +1,28 @@
+#!/bin/bash -x
+
+testHelpHalt() {
+	vagueant --help | grep -q -- 'halt - '
+	status=$?
+	assertEquals "--help should describe halt" "0" "$status"
+}
+
+testHalt() {
+	rm -rf ./tmp && mkdir -p ./tmp && cd ./tmp
+	
+	muter vagueant init
+
+	# destroy the existing lxc, just in case
+	( lxc-stop -n tmp; lxc-destroy -n tmp ) > /dev/null 2>&1
+
+	muter vagueant halt
+	assertEquals "halt should successfully halt an already halted lxc" "0" "$?"
+
+	muter vagueant up
+	assertEquals "up shouldn't have failed here..." "0" "$?"
+
+	muter vagueant halt
+	assertEquals "halt should halt running lxc" "0" "$?"
+
+	cd .. && rm -rf ./tmp
+}
+
