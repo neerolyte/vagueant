@@ -1,0 +1,26 @@
+#!/bin/bash
+
+testHelpDestroy() {
+	vagueant --help | grep -q -- 'destroy - '
+	status=$?
+	assertEquals "--help should describe destroy" "0" "$status"
+}
+
+testDestroy() {
+	rm -rf ./tmp && mkdir -p ./tmp && cd ./tmp
+
+	muter vagueant init
+	muter vagueant up
+
+	status=$(vagueant status)
+	assertEquals "lxc should be running" "running" "$status"
+	
+	muter vagueant destroy
+	assertEquals "lxc destroy shouldn't error" "0" "$?"
+
+	status=$(vagueant status)
+	assertEquals "lxc should not be created" "not created" "$status"
+
+	cd .. && rm -rf ./tmp
+}
+

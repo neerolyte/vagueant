@@ -99,7 +99,9 @@ command_create() {
 
 # destroy our lxc
 command_destroy() {
-	error TODO: command_destroy
+	command_halt
+
+	lxc-destroy -n "$name"
 } # command_destroy()
 
 # halt our lxc
