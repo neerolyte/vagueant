@@ -129,7 +129,7 @@ command_init() {
 # template=ubuntu
 
 # Some templates will accept additional arguments, pass in some:
-# template_args(--arch i386 --release precise)
+# template_args=(--arch i386 --release precise)
 
 # Provisioning enables you to run perform installations or configuration
 # once the base lxc has been installed.
