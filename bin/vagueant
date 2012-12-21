@@ -35,6 +35,7 @@ usage() {
 	echo "    up - start up a lxc (create it if required)"
 	echo "    halt - halt lxc specified by vagueant.conf"
 	echo "    console - connect to the console of a running lxc"
+	echo "    ssh - SSH into an lxc"
 	echo
 	echo "Note: This script abuses heredocs and evals in an effort to squeeeze it"
 	echo "in to a single file, if you're the kind of person who finds that"
@@ -91,10 +92,31 @@ command_create() {
 			> /var/lib/lxc/"$name"/rootfs/etc/apt/apt.conf.d/01proxy
 	fi
 
+    setup_passwordless_ssh
+
 	# run any provisioning scripts from the config
 	for p in "${provisions[@]}"; do
 		do_provision "$p"
 	done
+}
+
+setup_passwordless_ssh() {
+
+    # See http://www.stgraber.org/2012/07/17/easily-ssh-to-your-containers-and-vms-on-ubuntu-12-04-lts/
+
+    echo "Creating vagueant SSH config..."
+
+    cat > ~/.ssh/vagueant-config << EOF
+Host *.lxc
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+  ProxyCommand nc \$(host \$(echo %h | sed "s/\\.lxc//g") 10.0.3.1 | tail -1 | awk '{print \$NF}') %p
+EOF
+
+    echo "Copying SSH public key into LXC..."
+
+    mkdir -p /var/lib/lxc/"$name"/rootfs/home/ubuntu/.ssh
+    cat ~/.ssh/id_rsa.pub >> /var/lib/lxc/"$name"/rootfs/home/ubuntu/.ssh/authorized_keys
 }
 
 # destroy our lxc
@@ -164,6 +186,11 @@ command_console() {
 		error "Can not connect to console unless lxc is running (hint: $0 up)"
 	fi
 	lxc-console -n "$name"
+}
+
+# SSH into the lxc
+command_ssh() {
+    ssh ubuntu@"$name".lxc -F ~/.ssh/vagueant-config
 }
 
 ##############
