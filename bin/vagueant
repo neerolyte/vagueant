@@ -92,7 +92,7 @@ command_create() {
 			> /var/lib/lxc/"$name"/rootfs/etc/apt/apt.conf.d/01proxy
 	fi
 
-    setup_passwordless_ssh
+    command_setup_ssh
 
 	# run any provisioning scripts from the config
 	for p in "${provisions[@]}"; do
@@ -100,23 +100,42 @@ command_create() {
 	done
 }
 
-setup_passwordless_ssh() {
-
-    # See http://www.stgraber.org/2012/07/17/easily-ssh-to-your-containers-and-vms-on-ubuntu-12-04-lts/
-
-    echo "Creating vagueant SSH config..."
-
-    cat > ~/.ssh/vagueant-config << EOF
-Host *.lxc
-  StrictHostKeyChecking no
-  UserKnownHostsFile /dev/null
-  ProxyCommand nc \$(host \$(echo %h | sed "s/\\.lxc//g") 10.0.3.1 | tail -1 | awk '{print \$NF}') %p
-EOF
-
+command_setup_ssh() {
+	# Just like Vagrant, we use a highly insecure static publicly available key	
     echo "Copying SSH public key into LXC..."
 
     mkdir -p /var/lib/lxc/"$name"/rootfs/home/ubuntu/.ssh
-    cat ~/.ssh/id_rsa.pub >> /var/lib/lxc/"$name"/rootfs/home/ubuntu/.ssh/authorized_keys
+	
+	command_get_ssh_pub > /var/lib/lxc/"$name"/rootfs/home/ubuntu/.ssh/authorized_keys
+
+	if ! [[ -f ~/.ssh/vagueant-private-key ]]; then
+		mkdir -p ~/.ssh
+		command_get_ssh_priv > ~/.ssh/vagueant-private-key
+	fi
+	chmod 600 ~/.ssh/vagueant-private-key
+	command_get_ssh_pub > /var/lib/lxc/"$name"/rootfs/home/ubuntu/.ssh/authorized_keys
+}
+
+# Vagueant uses a static key (the same as Vagrant), there's
+# a secret command to get the public or private side:
+command_get_ssh_pub() {
+	echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAYQDLdWEJEKlX3NWGB/rtNiz/gM5mS45JGkW7eub/bP5G2rOO4Aff0y739SVW3MuSbAyJofntmaUneV9w9KuzIEsm6+MZDV1xJy48IW4/O059nw+ECvWZy6VVuvZdpmVLC9M= Vagueant's extremely insecure key."
+}
+command_get_ssh_priv() {	
+	cat << EOF
+-----BEGIN RSA PRIVATE KEY-----
+MIIBygIBAAJhAMt1YQkQqVfc1YYH+u02LP+AzmZLjkkaRbt65v9s/kbas47gB9/T
+Lvf1JVbcy5JsDImh+e2ZpSd5X3D0q7MgSybr4xkNXXEnLjwhbj87Tn2fD4QK9ZnL
+pVW69l2mZUsL0wIDAQABAmBzcXzHqf6Mbi9xx6Fna3AI4cs7W++2JwQeJtRfZja5
+eWqczR1qsOdbpmuzZ8DSqh9HxWBSHpWnlarq+938horyx5D2meiieeMKjbgER6sM
+J1GUrF9dAsHlmZQwUvdQ/8ECMQDvhfeL4BDKCnwPpHjOLEIqw5++WhpoMRiBfLrI
+JksX41/10n7LefgGvtSpYK2KufECMQDZdE6NoHeWXv7psyk2WYb4+SKHXBIHosm8
+rQbxv7imFc2gU52VJqFJO7PteRdKvgMCMQC4vAhq10vbqC57Gg0aZsQ5m1tvQqsv
+RP5zkDG3AOHV8MYoIEsuwEltWm1GnYv7fOECMErUExP5XC2Kkv2ogU4KkL+sO42I
+yUuHYRRkFjeqWcgNSK0bGObyXB3vRYM6YCGAMQIwdH838Q2b0JkJeuds/GCkBZ4H
+nFrI0YKlHUcttm+a4rJW74O+tmi9ZyWnnH6Bg1Xn
+-----END RSA PRIVATE KEY-----
+EOF
 }
 
 # destroy our lxc
@@ -190,7 +209,58 @@ command_console() {
 
 # SSH into the lxc
 command_ssh() {
-    ssh ubuntu@"$name".lxc -F ~/.ssh/vagueant-config
+	if ! [[ "$(command_status)" == "running" ]]; then
+		error "Can not ssh unless lxc is running (hint: $0 up)"
+	fi
+	
+	# See http://www.stgraber.org/2012/07/17/easily-ssh-to-your-containers-and-vms-on-ubuntu-12-04-lts/
+	c='' # command passed via ssh
+	# SSH command gets extra arguments (optionally)
+	while true; do
+		# quit if we're out of options
+		[[ -z "$1" ]] && break
+		
+		case "$1" in
+			-c)
+				c="$2"
+				shift # extra shift pulls $2 off stack
+				;;
+			*)
+				error "Unknown ssh option: $1"
+				usage
+				;;
+		esac
+
+		# get next arg
+		shift
+	done
+
+	# Especially during unit test runs, lxc reports the container as running
+	# before DNS is returning the right IP, so have to try a couple of times
+	# sometimes.
+	tries=5
+	ip="$(command_get_ip)"
+	while ! ping -c 1 "$ip" > /dev/null 2>&1; do
+		tries=$(($tries-1))
+		if [[ $tries -le 0 ]]; then
+			error "Ran out of time for lxc to respond to ping"
+		fi
+		ip="$(command_get_ip)"
+	done
+
+	ssh ubuntu@"$ip" \
+		-o 'StrictHostKeyChecking no' \
+		-o 'UserKnownHostsFile /dev/null' \
+		-i ~/.ssh/vagueant-private-key \
+		-- \
+		"$c"
+}
+
+# Get the current ip of the lcx container
+command_get_ip() {
+	# By default LXC supplies a dns server on 10.0.3.1, request the IP
+	# of our target from there.
+	dig "$name" @10.0.3.1 +short
 }
 
 ##############
@@ -296,6 +366,10 @@ while true; do
 			;;
 		*)
 			command="$1"
+			# remove command from arg list so it's not passed to the command
+			# itself
+			shift
+			break
 			;;
 	esac
 
@@ -309,4 +383,4 @@ if [[ "$(type -t "command_$command")" != 'function' ]]; then
 fi
 
 # go!
-command_"$command"
+command_"$command" "$@"
