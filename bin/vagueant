@@ -35,7 +35,7 @@ usage() {
 	echo "    up - start up a lxc (create it if required)"
 	echo "    halt - halt lxc specified by vagueant.conf"
 	echo "    console - connect to the console of a running lxc"
-	echo "    ssh - SSH into an lxc"
+	echo "    ssh [-c <command>] - SSH into an lxc, optionally passing a command"
 	echo
 	echo "Note: This script abuses heredocs and evals in an effort to squeeeze it"
 	echo "in to a single file, if you're the kind of person who finds that"

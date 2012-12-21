@@ -16,3 +16,11 @@ To create your first vagueant config, run:
 To build a lxc from a vagueant.conf, run:
 
     vagueant up
+
+To connect to the lxc, you can use ssh:
+
+    vagueant ssh [-c <command>]
+
+or the console:
+
+    vagueant console
