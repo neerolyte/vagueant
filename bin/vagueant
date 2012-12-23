@@ -360,6 +360,7 @@ while true; do
 	case "$1" in
 		--debug)
 			set -x
+			export PS4='+`basename $0`:$LINENO:$FUNCNAME '
 			;;
 		--help)
 			usage
