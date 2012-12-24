@@ -378,6 +378,11 @@ while true; do
 	shift
 done
 
+# Show usage if no command is entered
+if [[ "$command" == '' ]]; then
+	usage
+fi
+
 # Check if the command actually exists
 if [[ "$(type -t "command_$command")" != 'function' ]]; then
 	usage "unknown command '$command'"
