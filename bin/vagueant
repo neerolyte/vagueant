@@ -378,6 +378,12 @@ while true; do
 	shift
 done
 
+# Because I haven't yet seen a way of getting LXC really functional as a non-root
+# user we just error if we're running as non-root
+if [[ "$UID" != "0" ]]; then
+	error "vagueant currently only runs as root"
+fi
+
 # Check if the command actually exists
 if [[ "$(type -t "command_$command")" != 'function' ]]; then
 	usage "unknown command '$command'"

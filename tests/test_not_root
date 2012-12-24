@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Currently we don't expect anything much to work without root
+# as I haven't seen a functional lxc set up without using root.
+testNotRoot() {
+	rm -rf ./tmp && mkdir -p ./tmp && cd ./tmp
+
+	if ! id vagueanttesting > /dev/null 2>&1; then
+		useradd vagueanttesting
+	fi
+
+	muter sudo -u vagueanttesting vagueant init
+
+	sudo -u vagueanttesting vagueant | egrep -q 'ERROR: vagueant currently only runs as root'
+	assertEquals "expected message about vagueant only running as root" "0" "$?"
+}
+
