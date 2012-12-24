@@ -1,0 +1,22 @@
+#!/bin/bash
+
+testSSH() {
+	rm -rf ./tmp && mkdir -p ./tmp && cd ./tmp
+
+	muter vagueant init
+
+	# destroy the existing lxc, just in case
+	muter lxc-stop -n tmp
+	muter lxc-destroy -n tmp
+
+	muter vagueant up
+	assertEquals "vagueant up should exit with 0" "0" "$?"
+
+	# test running a remote command via ssh, similar to how you do it with
+	# Vagrant
+	hostname=$(vagueant ssh -c "hostname -f")
+	assertEquals "lxc should ask container for hostname via ssh" "tmp" "$hostname"
+	
+	cd .. && rm -rf ./tmp
+}
+
