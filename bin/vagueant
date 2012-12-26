@@ -56,6 +56,7 @@ proxy=""
 conffile="$PWD/vagueant.conf"
 template="ubuntu"
 template_args=(-a i386 -r precise)
+template_dir=/usr/lib/lxc/templates
 
 # references to provisions to be run, stored in a slightly
 # odd format because we don't have multidimensional arrays
@@ -82,19 +83,20 @@ command_template() {
 
     case "$subcommand" in
         "add")
-            if [ -x '"$template"' ]; then
+            if [ ! -x "$template" ]; then
                 error "Please specify the full path to the template"
             fi
 
-            cp "$2" "/usr/share/lxc/templates/`basename $template`"
-            echo "Adding '`basename $template`' to /usr/share/lxc/templates..."
+            cp "$2" "$template_dir/`basename $template`"
+            echo "Adding '`basename $template`' to $template_dir..."
         ;;
         "list")
-            ls /usr/share/lxc/templates --format single-column
+            ls "$template_dir" --format single-column
         ;;
         "remove")
-            if [ -e "/usr/share/lxc/templates/$template" ]; then
-                rm "/usr/share/lxc/templates/$template"
+            if [ -e "$template_dir/$template" ]; then
+                rm "$template_dir/$template"
+		echo "Removing '$template' from $template_dir..."
             else
                 error "Template '$template' does not exist. Use 'vaguant list' for a list of installed templates"
             fi
