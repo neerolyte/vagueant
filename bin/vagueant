@@ -30,6 +30,7 @@ usage() {
 	echo "commands:"
 	echo "    status - get status of current lxc"
 	echo "    init - create a vagueant.conf file"
+	echo "    template - add an lxc template"
 	echo "    create - build a lxc from the vagueant.conf"
 	echo "    destroy - get rid of the lxc referenced by vagueant.conf"
 	echo "    up - start up a lxc (create it if required)"
@@ -64,6 +65,42 @@ provisions=()
 ##################
 # Begin commands #
 ##################
+
+# Manage lxc templates
+command_template() {
+    subcommand="$1"
+    template="$2"
+
+    if [ -z $subcommand ]; then
+        echo "Usage: `basename $0` template <command> [<args>]"
+        echo ""
+        echo "Available subcommands:"
+        echo "     add"
+        echo "     list"
+        echo "     remove"
+    fi
+
+    case "$subcommand" in
+        "add")
+            if [ -x '"$template"' ]; then
+                error "Please specify the full path to the template"
+            fi
+
+            cp "$2" "/usr/share/lxc/templates/`basename $template`"
+            echo "Adding '`basename $template`' to /usr/share/lxc/templates..."
+        ;;
+        "list")
+            ls /usr/share/lxc/templates --format single-column
+        ;;
+        "remove")
+            if [ -e "/usr/share/lxc/templates/$template" ]; then
+                rm "/usr/share/lxc/templates/$template"
+            else
+                error "Template '$template' does not exist. Use 'vaguant list' for a list of installed templates"
+            fi
+        ;;
+    esac
+}
 
 # Start up the current lxc
 command_up() {
