@@ -69,6 +69,9 @@ provisions=()
 
 # Manage lxc templates
 command_template() {
+
+    load_conf
+
     subcommand="$1"
     template="$2"
 
