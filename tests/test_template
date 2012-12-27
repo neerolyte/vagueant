@@ -2,6 +2,11 @@
 
 testTemplate() {
 
+    # Create vagueant.conf with alternative template_dir
+    cat > vagueant.conf << EOF
+template_dir=/tmp
+EOF
+
     # First try adding and removing a non-existing template
     result=$(vagueant template add nonexistingtemplate)
     assertEquals "Show error message for incorrect template path" "ERROR: Please specify the full path to the template" "${result}"
@@ -26,5 +31,8 @@ testTemplate() {
     muter vagueant template remove lxc-ubuntu-puppet
     result=$(vagueant template list | grep lxc-ubuntu-puppet)
     assertEquals "lxc-ubuntu-puppet template should NOT be installed" "" "${result}"
+
+    # Remove the conf file
+    rm vagueant.conf
 }
 
