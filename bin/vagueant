@@ -345,6 +345,20 @@ do_provision() {
 	do_provision_"$type" "$@"
 }
 
+do_provision_puppet() {
+    manifest="$1"
+
+    # create the tmp dir for puppet manifests
+    mkdir -p /var/lib/lxc/"$name"/rootfs/tmp/vagueant-puppet
+
+    # move the manifest file into the lxc
+    mv "$manifest" /var/lib/lxc/"$name"/rootfs/tmp/vagueant-puppet
+    echo "Copying the puppet manifest into the lxc..."
+
+    # apply the puppet manifest via SSH
+    command_ssh -c 'sudo puppet apply /tmp/vagueant-puppet/"$manifest"'
+}
+
 # Shell code provision type
 do_provision_shell() {
 	command="$1"
