@@ -137,6 +137,13 @@ command_create() {
 	fi
 
     command_setup_ssh
+}
+
+# provision the lxc
+command_provision() {
+    load_conf
+
+    echo "Running provisioners..."
 
 	# run any provisioning scripts from the config
 	for p in "${provisions[@]}"; do
@@ -348,66 +355,36 @@ do_provision() {
 	do_provision_"$type" "$@"
 }
 
+# puppet provision
 do_provision_puppet() {
     manifest="$1"
+
+    echo "Running puppet provisioner for manifest [$manifest]"
 
     # create the tmp dir for puppet manifests
     mkdir -p /var/lib/lxc/"$name"/rootfs/tmp/vagueant-puppet
 
-    # move the manifest file into the lxc
-    mv "$manifest" /var/lib/lxc/"$name"/rootfs/tmp/vagueant-puppet
-    echo "Copying the puppet manifest into the lxc..."
+    # copy the manifest file into the lxc
+    cp "$manifest" /var/lib/lxc/"$name"/rootfs/tmp/vagueant-puppet
 
     # apply the puppet manifest via SSH
-    command_ssh -c 'sudo puppet apply /tmp/vagueant-puppet/"$manifest"'
+    command_ssh -c "sudo puppet apply --verbose --debug /tmp/vagueant-puppet/$manifest --modulepath /etc/puppet/modules"
 }
 
-# Shell code provision type
+# shell provision
 do_provision_shell() {
-	command="$1"
+	script="$1"
 
-	# Place run once script
-	cat > /var/lib/lxc/"$name"/rootfs/etc/runonce << EOF
-#!/bin/bash -ex
+    echo "Running shell provisioner for script [$script]"
 
-# prevent runonce from running twice
-echo "@reboot root rm -f /etc/runonce /etc/cron.d/runonce" \
-	> /etc/cron.d/runonce
+    # create the tmp dir for puppet manifests
+    mkdir -p /var/lib/lxc/"$name"/rootfs/tmp/vagueant-shell
 
-# Make sure we have \$PATH
-. /etc/environment
+    # copy the manifest file into the lxc
+    cp "$script" /var/lib/lxc/"$name"/rootfs/tmp/vagueant-shell
 
-$command
-
-# all done
-poweroff
-EOF
-
-	chmod +x /var/lib/lxc/"$name"/rootfs/etc/runonce
-
-	echo "@reboot root /etc/runonce > /var/log/runonce.log" > /var/lib/lxc/"$name"/rootfs/etc/cron.d/runonce
-	# initialize the log (so that we can tail it immediately)
-	echo -n > /var/lib/lxc/"$name"/rootfs/var/log/runonce.log
-
-	# boot up the VM, 
-	lxc-start -n "$name" -c /var/run/lxc/"$name".console -d
-
-	# Watch the runonce log
-	tail -f /var/lib/lxc/"$name"/rootfs/var/log/runonce.log &
-	tailpid=$!
-
-	# Wait for container to finish starting up...
-	lxc-wait -n "$name" -s RUNNING
-	# so that we can wait for runonce to complete.
-	if ! lxc-wait -n "$name" -s STOPPED; then
-		# TODO: first one fails a lot... it'd be nice to know why
-		echo "lxc-wait didn't exit cleanly, trying again in a moment"
-		sleep 1
-		lxc-wait -n "$name" -s STOPPED
-	fi
-
-	# Stop watching log
-	kill $tailpid
+    # run the shell script via SSH
+    command_ssh -c "sudo bash /tmp/vagueant-shell/$script"
 }
 
 # parse cli options
