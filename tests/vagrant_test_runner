@@ -39,6 +39,7 @@ tmp="$(mktemp)"
 	cat <<EOF
 #!/bin/bash
 verbose=$verbose
+test_root="$PWD"
 
 . /vagrant/tests/helper_funcs
 EOF
