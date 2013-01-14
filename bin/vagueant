@@ -384,6 +384,11 @@ if [[ "$UID" != "0" ]]; then
 	error "vagueant currently only runs as root"
 fi
 
+# Show usage if no command is entered
+if [[ "$command" == '' ]]; then
+	usage
+fi
+
 # Check if the command actually exists
 if [[ "$(type -t "command_$command")" != 'function' ]]; then
 	usage "unknown command '$command'"
