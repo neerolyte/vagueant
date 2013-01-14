@@ -1,0 +1,22 @@
+#!/bin/bash
+
+testTemplate() {
+
+    # First try adding and removing a non-existing template
+    result=$(vagueant template add nonexistingtemplate)
+    assertEquals "Show error message for incorrect template path" "ERROR: Please specify the full path to the template" "${result}"
+
+    result=$(vagueant template remove nonexistingtemplate)
+    assertEquals "Show error message for non existing template" "ERROR: Template 'nonexistingtemplate' does not exist. Use 'vaguant list' for a list of installed templates" "${result}"
+
+    # Now add and remove a template successfully.
+    muter vagueant template add `pwd`/lxc-test
+    result=$(vagueant template list | grep lxc-test)
+    assertEquals "lxc-test template should be installed" "lxc-test" "${result}"
+
+    muter vagueant template remove lxc-test
+    result=$(vagueant template list | grep lxc-test)
+    assertEquals "lxc-test template should NOT be installed" "" "${result}"
+
+}
+
