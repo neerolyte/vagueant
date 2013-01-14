@@ -238,13 +238,14 @@ command_ssh() {
 	# Especially during unit test runs, lxc reports the container as running
 	# before DNS is returning the right IP, so have to try a couple of times
 	# sometimes.
-	tries=5
+	tries=10
 	ip="$(command_get_ip)"
 	while ! ping -c 1 "$ip" > /dev/null 2>&1; do
 		tries=$(($tries-1))
 		if [[ $tries -le 0 ]]; then
 			error "Ran out of time for lxc to respond to ping"
 		fi
+		sleep 1
 		ip="$(command_get_ip)"
 	done
 
