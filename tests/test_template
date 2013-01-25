@@ -18,5 +18,13 @@ testTemplate() {
     result=$(vagueant template list | grep lxc-test)
     assertEquals "lxc-test template should NOT be installed" "" "${result}"
 
+    # Now add and remove a remote template successfully
+    muter vagueant template add https://raw.github.com/frankscholten/vagueant/8735b588e9da44881da611c3373ff6126276ccbf/templates/lxc-ubuntu-puppet
+    result=$(vagueant template list | grep lxc-ubuntu-puppet)
+    assertEquals "lxc-ubuntu-puppet template should be installed" "lxc-ubuntu-puppet" "${result}"
+
+    muter vagueant template remove lxc-ubuntu-puppet
+    result=$(vagueant template list | grep lxc-ubuntu-puppet)
+    assertEquals "lxc-ubuntu-puppet template should NOT be installed" "" "${result}"
 }
 
