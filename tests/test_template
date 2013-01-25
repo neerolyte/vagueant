@@ -1,12 +1,6 @@
 #!/bin/bash
 
-testTemplate() {
-
-    # Create vagueant.conf with alternative template_dir
-    cat > vagueant.conf << EOF
-template_dir=/tmp
-EOF
-
+_templateTests() {
     # First try adding and removing a non-existing template
     result=$(vagueant template add nonexistingtemplate)
     assertEquals "Show error message for incorrect template path" "ERROR: Please specify the full path to the template" "${result}"
@@ -36,3 +30,26 @@ EOF
     rm vagueant.conf
 }
 
+testTemplateWithDefaultDir() {
+    # Create vagueant.conf with alternative template_dir
+    echo > vagueant.conf
+
+    # Now add and remove a template successfully - ensure it ends up where we said it would
+    muter vagueant template add "$test_root"/lxc-test
+    assertTrue "template should create in system location" "[ -f /usr/lib/lxc/templates/lxc-test ]"
+	
+	# run other template tests
+	_templateTests
+}
+
+testTemplateWithCustomDir() {
+    # Create vagueant.conf with alternative template_dir
+    echo template_dir=/tmp > vagueant.conf
+	
+    # Now add and remove a template successfully - ensure it ends up where we said it would
+    muter vagueant template add "$test_root"/lxc-test
+    assertTrue "template should create in /tmp" "[ -f /tmp/lxc-test ]"
+	
+	# run other template tests
+	_templateTests
+}
