@@ -138,6 +138,7 @@ command_create() {
 	fi
 
     command_setup_ssh
+    command_setup_mounts
 }
 
 # provision the lxc
@@ -190,6 +191,28 @@ nFrI0YKlHUcttm+a4rJW74O+tmi9ZyWnnH6Bg1Xn
 EOF
 }
 
+# Setup mount points in order to bind mount directories from the ouside
+# into the lxc
+command_setup_mounts() {
+    load_conf
+
+    echo "Setting up bind mounts..."
+
+    config=/var/lib/lxc/"$name"/config
+
+    echo -e "\n# Vagueant Mount Points" >> $config
+
+    for m in "${mounts[@]}"; do
+        IFS=" " read -a mnt <<< "$m"
+        mnt_from=$(readlink -f ${mnt[0]})
+        mnt_to=$(sed -e 's,^\/,,' <<< ${mnt[1]})
+
+        mkdir -p /var/lib/lxc/"$name"/rootfs/$mnt_to
+
+        echo "lxc.mount.entry = $mnt_from $mnt_to none bind 0 0" >> $config
+    done
+}
+
 # destroy our lxc
 command_destroy() {
 	command_halt
@@ -223,6 +246,11 @@ command_init() {
 
 # Some templates will accept additional arguments, pass in some:
 # template_args=(--arch i386 --release precise)
+
+# You might want to mount your puppet manifests, modules or your app
+# into the lxc, use "/source /destination", where source can be relative
+# but the destination has to be the absolute path in the container.
+# mounts=( ". /puppet" )
 
 # Provisioning enables you to run perform installations or configuration
 # once the base lxc has been installed.
