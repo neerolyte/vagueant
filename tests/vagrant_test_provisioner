@@ -4,13 +4,6 @@
 #
 # Really dangerous, do not run on a machine you happen to like.
 
-# Prevent running if it looks like there's any chance we may not
-# be inside a Vagrant VM.
-if ! dmidecode | grep -A3 '^BIOS Information$' | grep -q 'Version: VirtualBox'; then
-	echo "ERROR: not in virtualbox, refusing to run"
-	exit 1
-fi
-
 # Install any missing packages
 pkgs=(lxc shunit2)
 missing=()
