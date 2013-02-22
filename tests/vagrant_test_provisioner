@@ -10,10 +10,6 @@ if ! dmidecode | grep -A3 '^BIOS Information$' | grep -q 'Version: VirtualBox'; 
 	echo "ERROR: not in virtualbox, refusing to run"
 	exit 1
 fi
-if ! id vagrant > /dev/null 2>&1; then
-	echo "ERROR: Not in a Vagrant VM, refusing to run"
-	exit 1
-fi
 
 # Install any missing packages
 pkgs=(lxc shunit2)
