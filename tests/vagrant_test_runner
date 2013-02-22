@@ -6,6 +6,9 @@ testsdir="$PWD"
 tests=()
 verbose=false
 
+# ensure /usr/local/bin is in PATH
+export PATH="/usr/local/bin:$PATH"
+
 # parse cli options
 while true; do
 	# quit if we're out of options
