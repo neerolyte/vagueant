@@ -1,2 +1,2 @@
 language: bash
-script: ./tests/vagrant_test_provisioner && ./tests/vagrant_test_runner
+script: sudo ./tests/vagrant_test_provisioner && sudo ./tests/vagrant_test_runner
