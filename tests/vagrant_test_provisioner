@@ -4,6 +4,9 @@
 #
 # Really dangerous, do not run on a machine you happen to like.
 
+cd "$(dirname "$(dirname "$0")")"
+vagueantdir="$PWD"
+
 # Install any missing packages
 pkgs=(lxc shunit2)
 missing=()
@@ -19,5 +22,5 @@ fi
 
 # Put a symlink to vagueant command so it's in $PATH
 if [[ ! -h /usr/local/bin/vagueant ]]; then
-	ln -s /vagrant/bin/vagueant /usr/local/bin/vagueant
+	ln -s "$vagueantdir"/bin/vagueant /usr/local/bin/vagueant
 fi
