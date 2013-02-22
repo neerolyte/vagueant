@@ -1,0 +1,2 @@
+language: bash
+script: ./tests/vagrant_test_provisioner && ./tests/vagrant_test_runner
