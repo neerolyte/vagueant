@@ -1,5 +1,5 @@
 #!/bin/bash
 
 testVagueantInPath() {
-	assertEquals "file" "$(type -t vagueant)"
+	assertEquals "Couldn't find vagueant in PATH: $PATH" "file" "$(type -t vagueant)"
 }
