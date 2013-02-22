@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
 cd "$(dirname "$0")"
+testsdir="$PWD"
 
 tests=()
 verbose=false
@@ -41,7 +42,7 @@ tmp="$(mktemp)"
 verbose=$verbose
 test_root="$PWD"
 
-. /vagrant/tests/helper_funcs
+. "$testsdir"/helper_funcs
 EOF
 	
 	# add in all the tests we need
