@@ -1,9 +1,9 @@
-Vagueant is vaguely like Vagrant for linux containers (lxc).
-It automates lxc configuration.
+# History
 
-These days you probably want to switch to https://github.com/fgrehm/vagrant-lxc though.
+Vagueant is no longer relevant. I'm keeping this repo up as I think it's an interesting snapshot of what was going on prior to Docker going public.
+# Vagueant
 
-[![Build Status](https://travis-ci.org/neerolyte/vagueant.png?branch=master)](https://travis-ci.org/neerolyte/vagueant)
+Vagueant is vaguely like Vagrant for linux containers (lxc). It automates lxc configuration.
 
 The way Vagueant is designed it's currently possible for a vagueant.conf to run arbitrary commands *on your parent host* system - I do not intend to fix this. I am building Vagueant as a stop gap to bridge the difference in the speed of lxc and usability of Vagrant, hopefully one day Vagrant itself will support lxc.
 
